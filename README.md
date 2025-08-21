@@ -71,7 +71,7 @@ Shows how regions are exposed to risks like droughts and floods.
 ➡️ High-risk regions need urgent climate adaptation.
 ---
 
-## Vulnerability to Climate Change Index by Region  
+# Vulnerability to Climate Change Index by Region  
 
 This chart shows how different regions are exposed to the **risks of climate change**, with values ranging from **0 (low vulnerability) to 1 (high vulnerability).**
 
