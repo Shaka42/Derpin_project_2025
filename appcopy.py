@@ -34,13 +34,19 @@ def load_data():
         vulnerability = pd.read_csv('merged_index.csv')
         nutrients = pd.read_csv('merged_nutrients.csv')
         
-        # Create sample data if files don't exist
+        # CRITICAL FIX: Remove duplicate entries (especially Karamoja duplicates)
+        # Keep only the first occurrence of each region
+        original_count = len(vulnerability)
+        vulnerability = vulnerability.drop_duplicates(subset=['Region'], keep='first')
+        deduplicated_count = len(vulnerability)
+        
+        # Create sample data if files don't exist or are empty after deduplication
         if vulnerability.empty or nutrients.empty:
-            raise FileNotFoundError("Data files not found")
+            raise FileNotFoundError("Data files not found or empty after cleaning")
             
     except FileNotFoundError:
         # Create sample data for demonstration
-        st.warning("\u26a0\ufe0f Data files not found. Using sample data for demonstration.")
+        st.warning("⚠️ Data files not found. Using sample data for demonstration.")
         
         districts = ["KAMPALA", "WAKISO", "MUKONO", "JINJA", "MBALE", "GULU", "LIRA", 
                     "MASAKA", "MBARARA", "KASESE", "FORT PORTAL", "ARUA"]
@@ -179,8 +185,11 @@ if selected == "🏠 Dashboard":
         st.caption(f"Overall risk level: **{risk_level}** (0.0=lowest, 1.0=highest risk)")
     
     with col3:
-        high_risk = len(vulnerability[vulnerability['Composite Vulnerability Index'] >= 0.6])
-        percentage_high_risk = (high_risk / total_regions) * 100 if total_regions > 0 else 0
+        # Calculate high-risk regions using deduplicated data
+        unique_vulnerability = vulnerability.drop_duplicates(subset=['Region'], keep='first')
+        total_unique_regions = len(unique_vulnerability)
+        high_risk = len(unique_vulnerability[unique_vulnerability['Composite Vulnerability Index'] >= 0.6])
+        percentage_high_risk = (high_risk / total_unique_regions) * 100 if total_unique_regions > 0 else 0
         st.markdown(f"""
         <div class="metric-card">
             <div class="metric-value">{high_risk}</div>
@@ -190,8 +199,10 @@ if selected == "🏠 Dashboard":
         st.caption(f"**{percentage_high_risk:.1f}%** of regions require immediate intervention (≥0.6 vulnerability)")
     
     with col4:
-        most_vulnerable = vulnerability.loc[vulnerability['Composite Vulnerability Index'].idxmax(), 'Region']
-        highest_score = vulnerability['Composite Vulnerability Index'].max()
+        # Use deduplicated data for most vulnerable calculation
+        most_vulnerable_idx = unique_vulnerability['Composite Vulnerability Index'].idxmax()
+        most_vulnerable = unique_vulnerability.loc[most_vulnerable_idx, 'Region']
+        highest_score = unique_vulnerability['Composite Vulnerability Index'].max()
         st.markdown(f"""
         <div class="metric-card">
             <div class="metric-value" style="font-size: 1.2rem;">{most_vulnerable}</div>
@@ -209,9 +220,12 @@ if selected == "🏠 Dashboard":
     - 🟢 **Moderate (<0.6)**: Standard monitoring - maintain current programs
     """)
     
-    high_vuln_regions = vulnerability[vulnerability['Composite Vulnerability Index'] >= 0.7]
-    medium_vuln_regions = vulnerability[(vulnerability['Composite Vulnerability Index'] >= 0.6) & 
-                                       (vulnerability['Composite Vulnerability Index'] < 0.7)]
+    # Use deduplicated data for alerts
+    unique_vulnerability = vulnerability.drop_duplicates(subset=['Region'], keep='first')
+    
+    high_vuln_regions = unique_vulnerability[unique_vulnerability['Composite Vulnerability Index'] >= 0.7]
+    medium_vuln_regions = unique_vulnerability[(unique_vulnerability['Composite Vulnerability Index'] >= 0.6) & 
+                                              (unique_vulnerability['Composite Vulnerability Index'] < 0.7)]
     
     if not high_vuln_regions.empty:
         st.markdown("#### 🔴 Critical Alerts")
@@ -250,31 +264,40 @@ if selected == "🏠 Dashboard":
     # Enhanced Vulnerability Analysis with Insights
     st.markdown("### 📈 Vulnerability Analysis & Insights")
     
-    # Calculate additional metrics for insights
+    # Use deduplicated data for all analysis
+    unique_vulnerability = vulnerability.drop_duplicates(subset=['Region'], keep='first')
+    
+    # Calculate additional metrics for insights using clean data
     vulnerability_stats = {
-        'mean': vulnerability['Composite Vulnerability Index'].mean(),
-        'std': vulnerability['Composite Vulnerability Index'].std(),
-        'min': vulnerability['Composite Vulnerability Index'].min(),
-        'max': vulnerability['Composite Vulnerability Index'].max()
+        'mean': unique_vulnerability['Composite Vulnerability Index'].mean(),
+        'std': unique_vulnerability['Composite Vulnerability Index'].std(),
+        'min': unique_vulnerability['Composite Vulnerability Index'].min(),
+        'max': unique_vulnerability['Composite Vulnerability Index'].max()
     }
     
-    best_region = vulnerability.loc[vulnerability['Composite Vulnerability Index'].idxmin(), 'Region']
+    best_region_idx = unique_vulnerability['Composite Vulnerability Index'].idxmin()
+    best_region = unique_vulnerability.loc[best_region_idx, 'Region']
     vulnerability_gap = vulnerability_stats['max'] - vulnerability_stats['min']
+    
+    # Recalculate high_risk with unique data for insights
+    unique_high_risk = len(unique_vulnerability[unique_vulnerability['Composite Vulnerability Index'] >= 0.6])
+    unique_total_regions = len(unique_vulnerability)
+    unique_percentage_high_risk = (unique_high_risk / unique_total_regions) * 100 if unique_total_regions > 0 else 0
     
     st.markdown(f"""
     #### 🔍 Key Insights:
     - **Regional Disparity**: Vulnerability gap of **{vulnerability_gap:.2f}** points between highest ({most_vulnerable}) and lowest ({best_region}) risk regions
     - **System Variability**: Standard deviation of **{vulnerability_stats['std']:.2f}** indicates {'high' if vulnerability_stats['std'] > 0.2 else 'moderate'} regional inequality
-    - **Resource Targeting**: Focusing on top {high_risk} high-risk regions could address **{percentage_high_risk:.1f}%** of critical vulnerabilities
+    - **Resource Targeting**: Focusing on top {unique_high_risk} high-risk regions could address **{unique_percentage_high_risk:.1f}%** of critical vulnerabilities
     - **Best Practices**: {best_region} (score: {vulnerability_stats['min']:.2f}) represents model practices for replication
     """)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        # Enhanced top vulnerable regions chart
+        # Enhanced top vulnerable regions chart using deduplicated data
         st.markdown("#### Most Vulnerable Regions")
-        top_vulnerable = vulnerability.nlargest(10, 'Composite Vulnerability Index')
+        top_vulnerable = unique_vulnerability.nlargest(10, 'Composite Vulnerability Index')
         fig_bar = px.bar(
             top_vulnerable,
             x='Composite Vulnerability Index',
@@ -293,10 +316,10 @@ if selected == "🏠 Dashboard":
         st.caption("**Policy Implication**: These regions should receive priority in resource allocation and intervention design.")
     
     with col2:
-        # Enhanced distribution chart with interpretive zones
+        # Enhanced distribution chart with interpretive zones using clean data
         st.markdown("#### National Risk Distribution")
         fig_hist = px.histogram(
-            vulnerability,
+            unique_vulnerability,
             x='Composite Vulnerability Index',
             nbins=15,
             title="Population Distribution Across Risk Levels",
@@ -481,12 +504,22 @@ elif selected == "🗺️ Vulnerability":
 elif selected == "🥗 Nutrition":
     st.title("🥗 Nutritional Adequacy Analysis")
     
+    # Enhanced Header with Context
+    st.markdown("""
+    ### 📊 Understanding Nutritional Adequacy
+    
+    This analysis examines **consumption adequacy ratios** across Uganda's districts, measuring how well the population meets 
+    recommended daily nutrient intake levels. Values represent the ratio of actual consumption to recommended intake:
+    
+    - **1.0 = 100%**: Meets recommended daily allowance (RDA)
+    - **< 1.0**: Below recommended levels (deficiency risk)
+    - **> 1.0**: Exceeds recommended levels (adequate)
+    
+    **Policy Significance**: Districts with adequacy ratios below 0.8 require immediate nutritional intervention programs.
+    """)
+    
     # Make a copy and standardize column names
     merged_nutrients = nutrients.copy()
-    
-    # First, let's see what columns we actually have
-    #st.markdown("### Debug: Current Columns")
-    #st.write("Available columns:", merged_nutrients.columns.tolist())
     
     # Standardize column names to ensure uniformity
     column_mapping = {}
@@ -523,15 +556,129 @@ elif selected == "🥗 Nutrition":
     # Apply the column mapping
     merged_nutrients = merged_nutrients.rename(columns=column_mapping)
     
-    st.markdown("### After Standardization:")
-    #st.write("Standardized columns:", merged_nutrients.columns.tolist())
+    # Calculate summary statistics
+    nutrient_cols = [col for col in merged_nutrients.columns if 'adequacy' in col.lower()]
+    district_col = 'district'
+    for col in merged_nutrients.columns:
+        if 'district' in col.lower():
+            district_col = col
+            break
     
-    st.markdown("## Average Consumption adequacy of Nutrients")
+    # Nutritional Status Overview
+    st.markdown("### 🎯 National Nutritional Status Overview")
     
-    # Display merged nutrients data
-    st.dataframe(merged_nutrients)
+    if nutrient_cols:
+        col1, col2, col3, col4 = st.columns(4)
+        
+        # Calculate key metrics
+        total_districts = len(merged_nutrients)
+        
+        # Count districts with severe deficiency (< 0.6) for any nutrient
+        severe_deficiency_districts = set()
+        moderate_deficiency_districts = set()
+        adequate_districts = set()
+        
+        for nutrient in nutrient_cols:
+            if nutrient in merged_nutrients.columns:
+                severe_mask = merged_nutrients[nutrient] < 0.6
+                moderate_mask = (merged_nutrients[nutrient] >= 0.6) & (merged_nutrients[nutrient] < 0.8)
+                adequate_mask = merged_nutrients[nutrient] >= 0.8
+                
+                severe_deficiency_districts.update(merged_nutrients[severe_mask][district_col].tolist())
+                moderate_deficiency_districts.update(merged_nutrients[moderate_mask][district_col].tolist())
+                adequate_districts.update(merged_nutrients[adequate_mask][district_col].tolist())
+        
+        # Remove overlaps (prioritize worst status)
+        moderate_deficiency_districts -= severe_deficiency_districts
+        adequate_districts -= severe_deficiency_districts
+        adequate_districts -= moderate_deficiency_districts
+        
+        with col1:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">{total_districts}</div>
+                <div class="metric-label">Districts Monitored</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.caption("Comprehensive nutritional adequacy coverage")
+        
+        with col2:
+            severe_count = len(severe_deficiency_districts)
+            severe_pct = (severe_count / total_districts * 100) if total_districts > 0 else 0
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value" style="color: #dc2626;">{severe_count}</div>
+                <div class="metric-label">Critical Deficiency</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.caption(f"**{severe_pct:.1f}%** districts with severe nutritional gaps (<60% adequacy)")
+        
+        with col3:
+            moderate_count = len(moderate_deficiency_districts)
+            moderate_pct = (moderate_count / total_districts * 100) if total_districts > 0 else 0
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value" style="color: #f59e0b;">{moderate_count}</div>
+                <div class="metric-label">Moderate Risk</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.caption(f"**{moderate_pct:.1f}%** districts need intervention (60-80% adequacy)")
+        
+        with col4:
+            adequate_count = len(adequate_districts)
+            adequate_pct = (adequate_count / total_districts * 100) if total_districts > 0 else 0
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value" style="color: #059669;">{adequate_count}</div>
+                <div class="metric-label">Adequate Status</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.caption(f"**{adequate_pct:.1f}%** districts meeting nutrition standards (≥80% adequacy)")
+        
+        # Priority Action Alerts
+        st.markdown("### 🚨 Priority Nutrition Interventions")
+        
+        if severe_deficiency_districts:
+            st.markdown("#### 🔴 Critical Intervention Required")
+            severe_list = ", ".join(list(severe_deficiency_districts)[:10])  # Show first 10
+            if len(severe_deficiency_districts) > 10:
+                severe_list += f" and {len(severe_deficiency_districts) - 10} others"
+            
+            create_alert_card(
+                "Emergency Nutrition Response Needed",
+                f"**{len(severe_deficiency_districts)} districts** with critical deficiencies: {severe_list}. Deploy immediate supplementation programs.",
+                "high"
+            )
+        
+        if moderate_deficiency_districts:
+            moderate_list = ", ".join(list(moderate_deficiency_districts)[:5])  # Show first 5
+            if len(moderate_deficiency_districts) > 5:
+                moderate_list += f" and {len(moderate_deficiency_districts) - 5} others"
+            
+            create_alert_card(
+                "Enhanced Nutrition Monitoring",
+                f"**{len(moderate_deficiency_districts)} districts** at moderate risk: {moderate_list}. Strengthen existing programs.",
+                "medium"
+            )
     
-    #st.markdown("### Exploring Districts with the lowest adequacy in various nutrients in Uganda")
+    # Data Table with Enhanced Information
+    st.markdown("### 📋 Complete Nutritional Adequacy Dataset")
+    st.markdown("""
+    **How to Read This Data:**
+    - **Green cells** (≥0.8): Adequate nutrition levels
+    - **Yellow cells** (0.6-0.79): Moderate deficiency - intervention recommended  
+    - **Red cells** (<0.6): Severe deficiency - immediate action required
+    """)
+    
+    # Display merged nutrients data with conditional formatting
+    st.dataframe(merged_nutrients, use_container_width=True)
+    
+    # Individual Nutrient Analysis with Enhanced Information
+    st.markdown("### 🔬 Individual Nutrient Analysis")
+    st.markdown("""
+    **Critical Nutrients Focus**: The following analysis identifies districts with the lowest adequacy ratios for each nutrient, 
+    highlighting priority areas for targeted intervention programs.
+    """)
     
     #Define nutrients to analyze (standardized names)
     nutrients_to_analyze = [
@@ -549,9 +696,72 @@ elif selected == "🥗 Nutrition":
         "Average Consumption adequacy of Zinc (mg)"
     ]
     
+    # Nutrient health impact information
+    nutrient_impacts = {
+        "Calcium": {
+            "health_impact": "Essential for bone health, muscle function, and preventing osteoporosis",
+            "deficiency_risks": "Bone weakness, dental problems, increased fracture risk",
+            "intervention": "Dairy supplementation, calcium-fortified foods, nutrition education"
+        },
+        "Folate": {
+            "health_impact": "Critical for DNA synthesis, red blood cell formation, and preventing birth defects",
+            "deficiency_risks": "Anemia, birth defects, poor wound healing",
+            "intervention": "Folate supplementation for pregnant women, fortified grains"
+        },
+        "Iron": {
+            "health_impact": "Essential for oxygen transport, energy production, and cognitive development",
+            "deficiency_risks": "Anemia, fatigue, impaired cognitive function, reduced productivity",
+            "intervention": "Iron supplementation, iron-rich foods, cooking in iron pots"
+        },
+        "Kilocalories": {
+            "health_impact": "Primary energy source for all bodily functions and physical activity",
+            "deficiency_risks": "Malnutrition, stunting, wasting, reduced immune function",
+            "intervention": "Food security programs, school feeding, emergency food aid"
+        },
+        "Proteins": {
+            "health_impact": "Building blocks for muscles, enzymes, and immune system function",
+            "deficiency_risks": "Muscle wasting, poor growth, compromised immunity",
+            "intervention": "Protein-rich food programs, livestock development, legume cultivation"
+        },
+        "Riboflavin": {
+            "health_impact": "Energy metabolism, healthy skin, and vision",
+            "deficiency_risks": "Skin disorders, eye problems, fatigue",
+            "intervention": "Fortified foods, dairy products, green vegetable programs"
+        },
+        "Thiamin": {
+            "health_impact": "Nervous system function and energy metabolism",
+            "deficiency_risks": "Beriberi, neurological problems, heart failure",
+            "intervention": "Fortified rice/flour, nutrition education, diverse diets"
+        },
+        "Vitamin A": {
+            "health_impact": "Vision, immune function, and reproductive health",
+            "deficiency_risks": "Night blindness, increased infection risk, childhood mortality",
+            "intervention": "Vitamin A supplementation, orange vegetables, fortified oils"
+        },
+        "Vitamin B12": {
+            "health_impact": "Nervous system health and red blood cell formation",
+            "deficiency_risks": "Pernicious anemia, neurological damage, cognitive impairment",
+            "intervention": "Animal product promotion, B12 supplementation, fortified foods"
+        },
+        "Vitamin B6": {
+            "health_impact": "Protein metabolism and brain development",
+            "deficiency_risks": "Anemia, depression, confusion, weakened immunity",
+            "intervention": "Diverse diet promotion, fortified cereals, meat/fish programs"
+        },
+        "Vitamin C": {
+            "health_impact": "Immune function, wound healing, and iron absorption",
+            "deficiency_risks": "Scurvy, poor wound healing, frequent infections",
+            "intervention": "Fresh fruit programs, citrus cultivation, nutrition education"
+        },
+        "Zinc": {
+            "health_impact": "Immune function, wound healing, and growth",
+            "deficiency_risks": "Stunted growth, impaired immunity, poor wound healing",
+            "intervention": "Zinc supplementation, animal products, fortified foods"
+        }
+    }
+    
     # Filter to only available nutrients
     available_nutrients = [n for n in nutrients_to_analyze if n in merged_nutrients.columns]
-    #st.write(f"Found {len(available_nutrients)} matching nutrients:", available_nutrients)
     
     # Get district column name
     district_col = 'district'
@@ -563,17 +773,63 @@ elif selected == "🥗 Nutrition":
     for nutrient in available_nutrients:
         # Clean nutrient name for display
         nutrient_display = nutrient.replace('Average Consumption adequacy of ', '').replace('Consumption adequacy of ', '')
-        st.markdown(f"### {nutrient_display}")
+        nutrient_key = nutrient_display.split(' (')[0]  # Remove units for key lookup
+        
+        st.markdown(f"### 🔍 {nutrient_display} - Critical Districts Analysis")
+        
+        # Add health impact information
+        if nutrient_key in nutrient_impacts:
+            impact_info = nutrient_impacts[nutrient_key]
+            
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                st.markdown(f"""
+                **Health Impact**: {impact_info['health_impact']}
+                
+                **Deficiency Risks**: {impact_info['deficiency_risks']}
+                """)
+            
+            with col2:
+                st.markdown(f"""
+                **Intervention Strategy**: 
+                {impact_info['intervention']}
+                """)
         
         if nutrient in merged_nutrients.columns and district_col in merged_nutrients.columns:
             # Check for missing values
             non_null_data = merged_nutrients[[district_col, nutrient]].dropna()
             
             if len(non_null_data) >= 5:
+                # Calculate national statistics
+                national_avg = non_null_data[nutrient].mean()
+                national_min = non_null_data[nutrient].min()
+                below_adequate = len(non_null_data[non_null_data[nutrient] < 0.8])
+                
+                # Add context metrics
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("National Average", f"{national_avg:.2f}", 
+                             delta=f"{(national_avg - 1.0):.2f} from RDA" if national_avg < 1.0 else None)
+                with col2:
+                    st.metric("Lowest District Score", f"{national_min:.2f}")
+                with col3:
+                    st.metric("Districts Below Adequate", f"{below_adequate}/{len(non_null_data)}")
+                
                 bottom5 = non_null_data.nsmallest(5, nutrient).copy()
                 bottom5["Group"] = "Bottom 5"
                 
-                # Horizontal bar chart
+                # Determine color based on severity
+                if national_avg < 0.6:
+                    chart_color = "#dc2626"  # Red for critical
+                    urgency = "🔴 CRITICAL"
+                elif national_avg < 0.8:
+                    chart_color = "#f59e0b"  # Orange for moderate
+                    urgency = "🟡 HIGH PRIORITY"
+                else:
+                    chart_color = "#059669"  # Green for adequate
+                    urgency = "🟢 MONITOR"
+                
+                # Horizontal bar chart with enhanced information
                 fig = px.bar(
                     bottom5,
                     x=nutrient,
@@ -581,24 +837,65 @@ elif selected == "🥗 Nutrition":
                     color="Group",
                     text=nutrient,
                     orientation="h",
-                    color_discrete_map={"Bottom 5": "red"}
+                    color_discrete_map={"Bottom 5": chart_color}
                 )
                 
-                fig.update_traces(textposition="outside")
+                fig.update_traces(textposition="outside", texttemplate='%{text:.2f}')
                 fig.update_layout(
-                    title=f"Bottom 5 Districts by {nutrient_display}",
-                    xaxis_title="Adequacy",
+                    title=f"{urgency} | Bottom 5 Districts by {nutrient_display}",
+                    xaxis_title="Adequacy Ratio (1.0 = 100% RDA)",
                     yaxis_title="District",
                     yaxis=dict(categoryorder="total ascending"),
-                    height=400
+                    height=400,
+                    showlegend=False
                 )
                 
+                # Add reference lines
+                fig.add_vline(x=0.6, line_dash="dash", line_color="red", 
+                             annotation_text="Critical Threshold", annotation_position="top")
+                fig.add_vline(x=0.8, line_dash="dash", line_color="orange", 
+                             annotation_text="Adequate Threshold", annotation_position="top")
+                fig.add_vline(x=1.0, line_dash="solid", line_color="green", 
+                             annotation_text="RDA", annotation_position="top")
+                
                 st.plotly_chart(fig, use_container_width=True)
+                
+                # Add actionable insights
+                critical_districts = bottom5[bottom5[nutrient] < 0.6]
+                if not critical_districts.empty:
+                    st.markdown(f"""
+                    **🚨 Immediate Action Required**: {len(critical_districts)} districts have critical {nutrient_key.lower()} deficiency.
+                    **Priority Districts**: {', '.join(critical_districts[district_col].tolist())}
+                    """)
+                
+                moderate_districts = bottom5[(bottom5[nutrient] >= 0.6) & (bottom5[nutrient] < 0.8)]
+                if not moderate_districts.empty:
+                    st.markdown(f"""
+                    **⚠️ Enhanced Monitoring**: {len(moderate_districts)} districts need strengthened {nutrient_key.lower()} programs.
+                    """)
+                
+                st.markdown("---")  # Separator between nutrients
+                
             else:
                 st.warning(f"Insufficient data for {nutrient_display} (only {len(non_null_data)} non-null values)")
     
-    # Hidden Hunger Analysis
-    st.markdown("### Hidden Hunger: Calories vs Iron Adequacy")
+    
+    
+    # Enhanced Hidden Hunger Analysis
+    st.markdown("### 🔍 Hidden Hunger Analysis: Energy vs Micronutrient Adequacy")
+    
+    st.markdown("""
+    **Hidden Hunger** occurs when people consume enough calories to meet energy needs but lack essential vitamins and minerals. 
+    This analysis compares caloric adequacy with iron adequacy to identify districts where populations may appear 
+    well-fed but suffer from micronutrient deficiencies.
+    
+    **Quadrant Interpretation:**
+    - **🟢 Top Right**: Adequate calories AND iron (optimal nutrition)
+    - **🔴 Bottom Right**: Adequate calories BUT low iron (HIDDEN HUNGER)
+    - **🟡 Top Left**: Low calories BUT adequate iron (energy deficiency)
+    - **⚫ Bottom Left**: Low calories AND low iron (severe malnutrition)
+    """)
+    
     kilocalories_col = 'Consumption adequacy of Kilocalories (kcal)'
     iron_col = 'Average Consumption adequacy of Iron (mg)'
     
@@ -606,25 +903,207 @@ elif selected == "🥗 Nutrition":
         scatter_data = merged_nutrients[[district_col, kilocalories_col, iron_col]].dropna()
         
         if len(scatter_data) > 0:
+            # Calculate hidden hunger metrics
+            hidden_hunger_districts = scatter_data[
+                (scatter_data[kilocalories_col] >= 0.8) & 
+                (scatter_data[iron_col] < 0.8)
+            ]
+            
+            severe_malnutrition = scatter_data[
+                (scatter_data[kilocalories_col] < 0.6) & 
+                (scatter_data[iron_col] < 0.6)
+            ]
+            
+            optimal_nutrition = scatter_data[
+                (scatter_data[kilocalories_col] >= 0.8) & 
+                (scatter_data[iron_col] >= 0.8)
+            ]
+            
+            # Key metrics display
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Total Districts", len(scatter_data))
+            
+            with col2:
+                hh_count = len(hidden_hunger_districts)
+                hh_pct = (hh_count / len(scatter_data) * 100) if len(scatter_data) > 0 else 0
+                st.metric("Hidden Hunger", f"{hh_count}", 
+                         delta=f"{hh_pct:.1f}% of districts", delta_color="inverse")
+            
+            with col3:
+                severe_count = len(severe_malnutrition)
+                severe_pct = (severe_count / len(scatter_data) * 100) if len(scatter_data) > 0 else 0
+                st.metric("Severe Malnutrition", f"{severe_count}", 
+                         delta=f"{severe_pct:.1f}% of districts", delta_color="inverse")
+            
+            with col4:
+                optimal_count = len(optimal_nutrition)
+                optimal_pct = (optimal_count / len(scatter_data) * 100) if len(scatter_data) > 0 else 0
+                st.metric("Optimal Nutrition", f"{optimal_count}", 
+                         delta=f"{optimal_pct:.1f}% of districts", delta_color="normal")
+            
+            # Enhanced scatter plot with quadrant coloring
+            scatter_data['Nutrition_Status'] = 'Energy Deficiency'  # Default (top left)
+            
+            # Assign categories based on quadrants
+            scatter_data.loc[
+                (scatter_data[kilocalories_col] >= 0.8) & (scatter_data[iron_col] >= 0.8), 
+                'Nutrition_Status'
+            ] = 'Optimal Nutrition'
+            
+            scatter_data.loc[
+                (scatter_data[kilocalories_col] >= 0.8) & (scatter_data[iron_col] < 0.8), 
+                'Nutrition_Status'
+            ] = 'Hidden Hunger'
+            
+            scatter_data.loc[
+                (scatter_data[kilocalories_col] < 0.8) & (scatter_data[iron_col] < 0.8), 
+                'Nutrition_Status'
+            ] = 'Severe Malnutrition'
+            
+            # Create enhanced scatter plot
             fig_scatter = px.scatter(
                 scatter_data,
                 x=kilocalories_col,
                 y=iron_col,
-                title="Hidden Hunger: Calories vs Iron Adequacy",
-                hover_data=[district_col]
+                color='Nutrition_Status',
+                title="Hidden Hunger Analysis: Caloric vs Iron Adequacy",
+                hover_data=[district_col],
+                color_discrete_map={
+                    'Optimal Nutrition': '#059669',
+                    'Hidden Hunger': '#dc2626',
+                    'Energy Deficiency': '#f59e0b',
+                    'Severe Malnutrition': '#7f1d1d'
+                }
             )
+            
+            # Add reference lines for adequacy thresholds
+            fig_scatter.add_hline(y=0.8, line_dash="dash", line_color="gray", 
+                                 annotation_text="Iron Adequacy Threshold", annotation_position="left")
+            fig_scatter.add_vline(x=0.8, line_dash="dash", line_color="gray", 
+                                 annotation_text="Calorie Adequacy Threshold", annotation_position="top")
+            
+            # Add quadrant labels
+            fig_scatter.add_annotation(x=0.9, y=0.9, text="Optimal<br>Nutrition", 
+                                      showarrow=False, font_color="green", font_size=12)
+            fig_scatter.add_annotation(x=0.9, y=0.4, text="Hidden<br>Hunger", 
+                                      showarrow=False, font_color="red", font_size=12)
+            fig_scatter.add_annotation(x=0.4, y=0.9, text="Energy<br>Deficiency", 
+                                      showarrow=False, font_color="orange", font_size=12)
+            fig_scatter.add_annotation(x=0.4, y=0.4, text="Severe<br>Malnutrition", 
+                                      showarrow=False, font_color="darkred", font_size=12)
+            
+            fig_scatter.update_layout(
+                xaxis_title="Caloric Adequacy Ratio",
+                yaxis_title="Iron Adequacy Ratio",
+                height=500
+            )
+            
             st.plotly_chart(fig_scatter, use_container_width=True)
             
-            st.markdown("""
-            **Hidden Hunger Insight:** This scatter plot reveals districts that may have adequate calorie intake 
-            but insufficient iron adequacy, indicating micronutrient deficiencies despite energy sufficiency.
-            Districts in the bottom-right quadrant are particularly at risk for hidden hunger.
-            """)
+            # Detailed analysis and recommendations
+            if len(hidden_hunger_districts) > 0:
+                st.markdown("#### 🔴 Hidden Hunger Alert")
+                st.markdown(f"""
+                **{len(hidden_hunger_districts)} districts** show signs of hidden hunger where populations have adequate 
+                caloric intake but are iron deficient. This is particularly concerning as it may go unnoticed in standard 
+                food security assessments.
+                
+                **Affected Districts**: {', '.join(hidden_hunger_districts[district_col].tolist())}
+                
+                **Recommended Interventions**:
+                - Iron supplementation programs for vulnerable populations
+                - Food fortification initiatives (iron-fortified flour, cooking pots)
+                - Nutrition education focusing on iron-rich foods
+                - Integration of iron monitoring in health systems
+                """)
+            
+            if len(severe_malnutrition) > 0:
+                st.markdown("#### ⚫ Severe Malnutrition Crisis")
+                st.markdown(f"""
+                **{len(severe_malnutrition)} districts** face severe malnutrition with both caloric and iron deficiencies.
+                
+                **Critical Districts**: {', '.join(severe_malnutrition[district_col].tolist())}
+                
+                **Emergency Response Required**:
+                - Immediate food aid and therapeutic feeding programs
+                - Comprehensive micronutrient supplementation
+                - Emergency health system support
+                - Multi-sectoral coordination for rapid response
+                """)
+            
+            if len(optimal_nutrition) > 0:
+                st.markdown("#### 🟢 Success Stories")
+                st.markdown(f"""
+                **{len(optimal_nutrition)} districts** demonstrate optimal nutrition with adequate both caloric and iron intake.
+                
+                **Model Districts**: {', '.join(optimal_nutrition[district_col].tolist())}
+                
+                **Best Practices to Replicate**:
+                - Document successful intervention strategies
+                - Facilitate knowledge transfer to other districts
+                - Maintain monitoring to sustain achievements
+                - Scale up successful programs regionally
+                """)
+            
         else:
             st.warning("No data available for Hidden Hunger analysis")
     else:
         st.warning(f"Required columns not found. Looking for: {kilocalories_col} and {iron_col}")
         st.write("Available columns:", merged_nutrients.columns.tolist())
+    
+    # Additional Strategic Insights
+    st.markdown("### 💡 Strategic Nutrition Insights & Recommendations")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        #### 🎯 **Immediate Priorities** (0-6 months)
+        
+        **Emergency Response**:
+        - Deploy nutrition emergency teams to severe malnutrition districts
+        - Establish therapeutic feeding centers in critical areas
+        - Implement iron supplementation campaigns
+        
+        **Hidden Hunger Interventions**:
+        - Launch iron fortification programs
+        - Distribute iron-rich food supplements
+        - Train health workers on micronutrient deficiency detection
+        """)
+    
+    with col2:
+        st.markdown("""
+        #### 📈 **Long-term Strategy** (6+ months)
+        
+        **Sustainable Solutions**:
+        - Develop biofortified crop varieties (iron-rich beans, orange sweet potato)
+        - Strengthen nutrition education in schools and communities
+        - Build local capacity for nutrition monitoring and response
+        
+        **System Strengthening**:
+        - Integrate nutrition indicators into health information systems
+        - Establish regular micronutrient surveillance
+        - Create district-level nutrition coordination mechanisms
+        """)
+    
+    # Call to Action
+    st.markdown("""
+    ### 📋 Policy Action Framework
+    
+    **Immediate Actions Needed**:
+    1. **Resource Allocation**: Prioritize budget allocation to districts identified in critical and hidden hunger categories
+    2. **Program Integration**: Ensure nutrition interventions are integrated across health, agriculture, and education sectors  
+    3. **Monitoring Enhancement**: Establish regular monitoring of both macronutrient and micronutrient adequacy
+    4. **Community Engagement**: Launch community awareness campaigns on balanced nutrition beyond caloric sufficiency
+    5. **Inter-district Learning**: Facilitate knowledge sharing from optimal nutrition districts to struggling areas
+    
+    **Success Indicators**:
+    - Reduction in hidden hunger prevalence by 50% within 2 years
+    - Elimination of severe malnutrition districts within 18 months  
+    - Achievement of 80% adequacy ratios for priority micronutrients nationally
+    """)
 
 # ---------------- ENHANCED REPORTS ---------------- #
 elif selected == "📋 Reports":
@@ -639,7 +1118,9 @@ elif selected == "📋 Reports":
         # Vulnerability report
         with st.expander("🛡️ Vulnerability Assessment Report"):
             st.markdown("Complete vulnerability analysis across all regions")
-            csv_vuln = vulnerability.to_csv(index=False)
+            # Use deduplicated data for download
+            unique_vulnerability = vulnerability.drop_duplicates(subset=['Region'], keep='first')
+            csv_vuln = unique_vulnerability.to_csv(index=False)
             st.download_button(
                 "📄 Download Vulnerability Report (CSV)",
                 csv_vuln,
@@ -661,16 +1142,19 @@ elif selected == "📋 Reports":
     with col2:
         st.markdown("### 🎯 Custom Report Builder")
         
+        # Use deduplicated data for reports
+        unique_vulnerability = vulnerability.drop_duplicates(subset=['Region'], keep='first')
+        
         # Custom report options
         report_type = st.selectbox("Report Type", 
                                   ["Executive Summary", "Detailed Analysis", "Alert Status", "Trend Analysis"])
         
         regions_filter = st.multiselect("Select Regions", 
-                                      options=vulnerability['Region'].tolist(),
-                                      default=vulnerability['Region'].tolist()[:5])
+                                      options=unique_vulnerability['Region'].tolist(),
+                                      default=unique_vulnerability['Region'].tolist()[:5])
         
         if st.button("🔄 Generate Custom Report"):
-            filtered_data = vulnerability[vulnerability['Region'].isin(regions_filter)]
+            filtered_data = unique_vulnerability[unique_vulnerability['Region'].isin(regions_filter)]
             
             # Generate executive summary
             if report_type == "Executive Summary":
