@@ -7,13 +7,6 @@
 - **Total districts**: 122  
 - **Total indicators**: 12  
 
-### Example Indicators
-- Average Consumption adequacy of nutrients/Calcium  
-- Average Consumption adequacy of nutrients/Iron  
-- Average Consumption adequacy of nutrients/Proteins  
-- Average Consumption adequacy of nutrients/Vitamin A  
-- Average Consumption adequacy of nutrients/Vitamin B12  
-- Average Consumption adequacy of nutrients/Zinc  
 
 ## Methodology
 1. Standardize the district key across all inputs.  
