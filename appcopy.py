@@ -10,7 +10,6 @@ import requests
 from datetime import datetime, timedelta
 import altair as alt
 
-# Optional: add streamlit-option-menu
 try:
     from streamlit_option_menu import option_menu
     OPTION_MENU_AVAILABLE = True
@@ -23,6 +22,8 @@ try:
 except ImportError:
     GEOPANDAS_AVAILABLE = False
 
+st.set_page_config(page_title="DERPIn Vulnerability Explorer", layout="wide")
+st.title("DERPIn Community Vulnerability Explorer")
 
 # ---------------- DATA LOADING WITH ERROR HANDLING ---------------- #
 @st.cache_data
@@ -51,7 +52,6 @@ def load_data():
             'Mean Adequacy Ratio Index': np.random.uniform(0.3, 0.9, len(districts)),
             'Per Capita Food Consumption Index': np.random.uniform(0.2, 0.8, len(districts)),
             'Vulnerability to Climate Change Index': np.random.uniform(0.1, 0.9, len(districts)),
-            'Population': np.random.randint(50000, 1500000, len(districts)),
             'latitude': np.random.uniform(-1.5, 4.2, len(districts)),
             'longitude': np.random.uniform(29.5, 35.0, len(districts))
         })
@@ -87,7 +87,7 @@ def create_alert_card(title, message, alert_type="info"):
     alert_class = f"alert-{alert_type}"
     st.markdown(f"""
     <div class="{alert_class}">
-        <h4> '🚨' {title}</h4>
+        <h4> 🚨 {title}</h4>
         <p>{message}</p>
     </div>
     """, unsafe_allow_html=True)
@@ -96,7 +96,7 @@ def create_alert_card(title, message, alert_type="info"):
 with st.sidebar:
     st.markdown("""
     <div style='text-align: center; padding: 1rem;'>
-        <h2 style='color: #2563eb; margin-bottom: 0.5rem;'>'🌍' DERPIn</h2>
+        <h2 style='color: #2563eb; margin-bottom: 0.5rem;'>🌍 DERPIn</h2>
         <p style='color: #64748b; font-size: 0.9rem;'>Community Vulnerability Dashboard</p>
     </div>
     """, unsafe_allow_html=True)
@@ -104,7 +104,7 @@ with st.sidebar:
     if OPTION_MENU_AVAILABLE:
         selected = option_menu(
             menu_title="Navigation",
-            options=["🏠 Dashboard", "🗺️ Risk Map", "🥗 Nutrition", "📊 Analytics", "🚨 Alerts", "📋 Reports"],
+            options=["🏠 Dashboard", "🗺️ Vulnerability", "🥗 Nutrition", "📋 Reports"],
             icons=["house", "map", "clipboard-data", "bar-chart", "exclamation-triangle", "file-earmark-text"],
             default_index=0,
             styles={
@@ -117,7 +117,7 @@ with st.sidebar:
     else:
         selected = st.selectbox(
             "Navigate to:",
-            ["🏠 Dashboard", "🗺️ Risk Map", "🥗 Nutrition", "📊 Analytics", "🚨 Alerts", "📋 Reports"]
+            ["🏠 Dashboard", "🗺️ Vulnerability", "🥗 Nutrition", "📋 Reports"]
         )
     
     # Quick stats in sidebar
@@ -234,13 +234,21 @@ if selected == "🏠 Dashboard":
         )
         st.plotly_chart(fig_hist, use_container_width=True)
 
-# ---------------- ENHANCED RISK MAP ---------------- #
+# ---------------- ENHANCED Vulnerability and Nutrition---------------- #
 
-# --- Replace Risk Map page with analytics/visuals from derpin_notebook_app.py --- #
-elif selected == "🗺️ Risk Map":
-    st.title("🗺️ Vulnerability Analytics (No Map)")
-    # Composite Vulnerability
-    st.header("Composite Vulnerability Index by Region")
+
+elif selected == "🗺️ Vulnerability":
+    st.title("🗺️ Vulnerability & Nutrition Analytics")
+
+    st.markdown("""
+    ### Composite Vulnerability Index by Region
+    The **Composite Vulnerability Index (CVI)** is the average of four dimensions:
+    - Health System Vulnerability
+    - Mean Adequacy Ratio (nutrition adequacy)
+    - Per Capita Food Consumption
+    - Vulnerability to Climate Change
+    This provides a single measure (0 = low, 1 = high) to compare regions.
+    """)
     if 'Composite Vulnerability Index' in vulnerability.columns:
         composite = vulnerability[['Region','Composite Vulnerability Index']].drop_duplicates(subset=['Region']).sort_values(by='Composite Vulnerability Index', ascending=False).reset_index(drop=True)
         fig = px.bar(
@@ -256,8 +264,11 @@ elif selected == "🗺️ Risk Map":
     else:
         st.warning("Composite Vulnerability Index data not available.")
 
-    # Health System Vulnerability
-    st.header("Health System Vulnerability Index by Region")
+    st.markdown("""
+    ---
+    ### Health System Vulnerability Index by Region
+    The **Health System Vulnerability Index** measures a region’s susceptibility to health system challenges. (0 = low, 1 = high)
+    """)
     if 'Health System Vulnerability Index' in vulnerability.columns:
         health = vulnerability[['Region','Health System Vulnerability Index']].drop_duplicates(subset=['Region']).sort_values(by='Health System Vulnerability Index', ascending=False).reset_index(drop=True)
         fig = px.scatter(
@@ -274,8 +285,13 @@ elif selected == "🗺️ Risk Map":
     else:
         st.warning("Health System Vulnerability Index data not available.")
 
-    # Food Security
-    st.header("Nutrition Adequacy vs Food Consumption by Region")
+    st.markdown("""
+    ---
+    ### Nutrition Adequacy vs Food Consumption by Region
+    This chart compares **per capita food consumption** with the **mean adequacy ratio of nutrients** across regions.
+    - Higher on the chart: better nutrient adequacy
+    - Further right: higher food consumption (not always adequate nutrition)
+    """)
     if 'Mean Adequacy Ratio Index' in vulnerability.columns and 'Per Capita Food Consumption Index' in vulnerability.columns:
         food_sec = vulnerability[['Region','Mean Adequacy Ratio Index','Per Capita Food Consumption Index']].drop_duplicates(subset=['Region']).reset_index(drop=True)
         fig = px.scatter(
@@ -292,8 +308,11 @@ elif selected == "🗺️ Risk Map":
     else:
         st.warning("Food security data not available.")
 
-    # Climate Change Vulnerability
-    st.header("Vulnerability to Climate Change Index by Region")
+    st.markdown("""
+    ---
+    ### Vulnerability to Climate Change Index by Region
+    This chart shows how different regions are exposed to the risks of **climate change**, with values ranging from 0 (low) to 1 (high).
+    """)
     if 'Vulnerability to Climate Change Index' in vulnerability.columns:
         climate = vulnerability[['Region','Vulnerability to Climate Change Index']].drop_duplicates(subset=['Region']).sort_values(by='Vulnerability to Climate Change Index', ascending=False).reset_index(drop=True)
         fig = px.bar(
@@ -309,8 +328,11 @@ elif selected == "🗺️ Risk Map":
     else:
         st.warning("Climate Change Vulnerability Index data not available.")
 
-    # Nutrient Table
-    st.header("Merged Nutrient Data Table")
+    st.markdown("""
+    ---
+    ### Merged Nutrient Data Table
+    Below is the merged nutrient adequacy data for all districts.
+    """)
     if nutrients is not None:
         st.dataframe(nutrients)
     else:
@@ -400,95 +422,6 @@ elif selected == "🥗 Nutrition":
             )
             st.plotly_chart(fig_radar, use_container_width=True)
 
-# ---------------- ANALYTICS PAGE ---------------- #
-elif selected == "📊 Analytics":
-    st.title("📊 Advanced Analytics")
-    
-    # Correlation analysis
-    st.markdown("### 🔗 Vulnerability-Nutrition Correlations")
-    
-    merged = pd.merge(vulnerability, nutrients, left_on='Region', right_on='district', how='inner')
-    
-    if not merged.empty:
-        # Correlation matrix
-        vuln_cols = ['Composite Vulnerability Index', 'Health System Vulnerability Index', 
-                    'Mean Adequacy Ratio Index', 'Per Capita Food Consumption Index']
-        nutrient_cols = [col for col in nutrients.columns if 'Average Consumption adequacy' in col]
-        
-        correlation_data = merged[vuln_cols + nutrient_cols].corr()
-        
-        fig_corr = px.imshow(
-            correlation_data,
-            title="🔥 Vulnerability-Nutrition Correlation Heatmap",
-            color_continuous_scale="RdBu",
-            aspect="auto"
-        )
-        st.plotly_chart(fig_corr, use_container_width=True)
-        
-        # Scatter plot analysis
-        st.markdown("### 📈 Detailed Relationship Analysis")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            vuln_indicator = st.selectbox("Vulnerability Indicator", vuln_cols)
-        with col2:
-            nutr_indicator = st.selectbox("Nutrition Indicator", nutrient_cols)
-        
-        fig_scatter = px.scatter(
-            merged,
-            x=nutr_indicator,
-            y=vuln_indicator,
-            size='Population',
-            hover_name='Region',
-            trendline="ols",
-            title=f"📊 {nutr_indicator.split('/')[-1]} vs {vuln_indicator}",
-            color=vuln_indicator,
-            color_continuous_scale="RdYlGn_r"
-        )
-        st.plotly_chart(fig_scatter, use_container_width=True)
-
-# ---------------- ALERTS PAGE ---------------- #
-elif selected == "🚨 Alerts":
-    st.title("🚨 Early Warning Alerts")
-    
-    # Alert classification
-    high_vuln = vulnerability[vulnerability['Composite Vulnerability Index'] >= 0.7]
-    medium_vuln = vulnerability[(vulnerability['Composite Vulnerability Index'] >= 0.4) & 
-                               (vulnerability['Composite Vulnerability Index'] < 0.7)]
-    
-    # Critical alerts
-    st.markdown("### 🔴 Critical Alerts")
-    if not high_vuln.empty:
-        for _, region in high_vuln.iterrows():
-            with st.expander(f"🚨 CRITICAL: {region['Region']}", expanded=True):
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Vulnerability Index", f"{region['Composite Vulnerability Index']:.2f}")
-                with col2:
-                    st.metric("Population at Risk", f"{region['Population']:,}")
-                with col3:
-                    st.metric("Risk Level", "HIGH 🔴")
-                
-                st.markdown(f"""
-                **Recommended Actions:**
-                - 🏥 Deploy emergency health resources
-                - 🍽️ Implement food security programs  
-                - 🏠 Strengthen community infrastructure
-                - 📊 Increase monitoring frequency
-                """)
-    else:
-        st.success("🎉 No critical alerts at this time!")
-    
-    # Warning alerts
-    st.markdown("### 🟡 Warning Alerts")
-    if not medium_vuln.empty:
-        for _, region in medium_vuln.iterrows():
-            with st.expander(f"⚠️ WARNING: {region['Region']}"):
-                st.markdown(f"Vulnerability Index: **{region['Composite Vulnerability Index']:.2f}**")
-                st.markdown("Preventive measures recommended.")
-    else:
-        st.info("No warning alerts currently active.")
-
 # ---------------- ENHANCED REPORTS ---------------- #
 elif selected == "📋 Reports":
     st.title("📋 Comprehensive Reporting")
@@ -541,7 +474,7 @@ elif selected == "📋 Reports":
                 
                 avg_vuln = filtered_data['Composite Vulnerability Index'].mean()
                 high_risk_count = len(filtered_data[filtered_data['Composite Vulnerability Index'] >= 0.6])
-                total_population = filtered_data['Population'].sum()
+                
                 
                 summary_report = f"""
                 # Community Vulnerability Executive Summary
@@ -551,8 +484,7 @@ elif selected == "📋 Reports":
                 ## Key Findings
                 - **Average Vulnerability Index:** {avg_vuln:.2f}
                 - **High-Risk Regions:** {high_risk_count}
-                - **Total Population:** {total_population:,}
-                - **Population at High Risk:** {filtered_data[filtered_data['Composite Vulnerability Index'] >= 0.6]['Population'].sum():,}
+                
                 
                 ## Risk Classification
                 """
@@ -631,38 +563,6 @@ elif selected == "📋 Reports":
                         for region in low_risk['Region']:
                             st.write(f"- {region}")
 
-'''# ---------------- DATA EXPORT AND API INTEGRATION ---------------- #
-st.markdown("---")
-st.markdown("### 🔗 Data Integration & Export")
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    if st.button("🔄 Refresh Data from AGWAA API"):
-        with st.spinner("Fetching latest data from AGWAA API..."):
-            # Placeholder for API integration
-            st.info("API integration would fetch real-time data from AGWAA endpoints")
-            st.code("""
-# Example API integration
-import requests
-
-def fetch_uganda_data():
-    try:
-        response = requests.get('https://www.aagwa.org/Uganda/data?p=Uganda')
-        if response.status_code == 200:
-            return response.json()
-    except Exception as e:
-        st.error(f"API Error: {e}")
-        return None
-            """)
-
-with col2:
-    if st.button("📊 Export to Power BI"):
-        st.info("Integration with Power BI would export current dataset for advanced visualization")
-
-with col3:
-    if st.button("📧 Generate Email Alert"):
-        st.success("Alert notifications would be sent to registered stakeholders")'''
 
 # ---------------- FOOTER WITH INSIGHTS ---------------- #
 st.markdown("---")
