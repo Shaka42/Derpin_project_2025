@@ -1,4 +1,3 @@
-# Derpin_project_2025
 # Nutrient Adequacy Dataset (District-Level)
 
 ## Dataset Overview
