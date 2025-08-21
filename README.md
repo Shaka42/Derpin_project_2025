@@ -29,52 +29,46 @@
 - Drop duplicate rows (keep first).  
 - Retain indicators with at least one non-missing value.  
 
-# Communicating Composite Vulnerability
+# Communicating Composite Vulnerability  
 
-## Composite Vulnerability Index by Region  
+## Composite Vulnerability Index (CVI)  
+The CVI combines four factors into one score:  
+- Health system vulnerability  
+- Nutrition adequacy  
+- Per capita food consumption  
+- Climate change vulnerability  
 
-The **Composite Vulnerability Index (CVI)** is the average of four dimensions:  
-- Health System Vulnerability  
-- Mean Adequacy Ratio (nutrition adequacy)  
-- Per Capita Food Consumption  
-- Vulnerability to Climate Change  
+**Scale:** 0 = low, 1 = high  
 
-This provides a single measure (**0 = low, 1 = high**) to compare regions.
-
-
-> **Insight:**  
-> Acholi, Lango, and Busoga are the most vulnerable regions, while Kampala and Elgon are the least.  
-> This suggests interventions should target the high-risk regions first to strengthen resilience.  
-
+**Insight:** Acholi, Lango, and Busoga are the most vulnerable. Kampala and Elgon are the least.  
+➡️ Support should focus first on the high-risk regions.  
 
 ---
 
-## Health System Vulnerability Index  
+## Health System Vulnerability  
+Shows how much regions are at risk from weak health services.  
 
-The **Health System Vulnerability Index** measures a region’s susceptibility to health system challenges.  
-Scale: **0 = low vulnerability, 1 = high vulnerability.**
-
-
-> **Insight:**  
-> Lango is the most vulnerable region, while Kampala is the least.  
-> Prioritize interventions in high-risk areas like Lango to improve resilience.  
-
+**Insight:** Lango is the most vulnerable. Kampala is the least.  
+➡️ Improving health systems in Lango and similar regions will reduce risk.  
 
 ---
 
-## Nutrition Adequacy vs Food Consumption by Region  
+## Nutrition Adequacy vs Food Consumption  
+Compares how much food people eat with how nutritious it is.  
 
-This chart compares **per capita food consumption** with the **mean adequacy ratio of nutrients** across regions.  
+- Higher = better nutrition  
+- Further right = more food  
 
-- Regions higher on the chart = better nutrient adequacy (even if food consumption is low).  
-- Regions further right = higher food consumption (though this does not always guarantee adequate nutrition).  
+**Insight:** Some regions eat more food but still lack good nutrition.  
+➡️ Programs should promote balanced diets, not just bigger food supply.  
 
+---
 
+## Vulnerability to Climate Change  
+Shows how regions are exposed to risks like droughts and floods.  
 
-> **Insight:**  
-> Some regions consume more food but still have low nutrient adequacy, highlighting the need for **diverse diets** and **nutrition-focused interventions**.  
-
-
+**Insight:** Kigezi, Busoga, and Ankole are most at risk. Kampala and Elgon are least.  
+➡️ High-risk regions need urgent climate adaptation.
 ---
 
 ## Vulnerability to Climate Change Index by Region  
