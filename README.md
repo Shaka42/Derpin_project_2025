@@ -39,7 +39,7 @@
 ### Coverage by Indicator  
 All 12 indicators cover 100% of districts (122/122).  
 
-### Summary Statistics (examples)
+### Summary sample Statistics 
 | Indicator | Mean | Median | Min | Max |
 |-----------|------|--------|-----|-----|
 | Calcium   | 63.7 | 65.8   | 7.9 | 100 |
@@ -72,7 +72,7 @@ All 12 indicators cover 100% of districts (122/122).
 | Kalangala  | 92.6  |
 | Kabarole   | 92.2  |
 
-## Policy Playbooks
+## Policy Action Points
 - Maternal & Child Health → Focus on Iron & Folate in low-scoring districts.  
 - Child Survival → Expand Vitamin A supplementation.  
 - Immunity & Morbidity → Promote Zinc & Vitamin C (legumes, fruits, school feeding).  
@@ -98,10 +98,8 @@ All 12 indicators cover 100% of districts (122/122).
 - Supply chain → Buffer stocks & multi-supplier contracts.  
 - Behavioral adoption → Strengthen SBCC & CHW follow-up.  
 
-## Reproducibility & Extensibility
-- Schema: one row per district, one column per indicator.  
-- Pipeline: cleaning → merge → stats → composite score.  
-- Extensible: new nutrient files auto-detected.  
+## Reproducibility of Solution
+- The solution is reproducible via a streamlit app in the notebook
 
 ## How to Use
 1. Open `merged_nutrients.csv` in R, Python, Excel, or PowerBI.  
