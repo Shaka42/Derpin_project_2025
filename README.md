@@ -30,6 +30,67 @@
 - Drop duplicate rows (keep first).  
 - Retain indicators with at least one non-missing value.  
 
+# Communicating Composite Vulnerability
+
+## Composite Vulnerability Index by Region  
+
+The **Composite Vulnerability Index (CVI)** is the average of four dimensions:  
+- Health System Vulnerability  
+- Mean Adequacy Ratio (nutrition adequacy)  
+- Per Capita Food Consumption  
+- Vulnerability to Climate Change  
+
+This provides a single measure (**0 = low, 1 = high**) to compare regions.
+
+![Composite Vulnerability Index](path/to/composite_vulnerability_chart.png)
+
+> **Insight:**  
+> Acholi, Lango, and Busoga are the most vulnerable regions, while Kampala and Elgon are the least.  
+> This suggests interventions should target the high-risk regions first to strengthen resilience.  
+
+
+---
+
+## Health System Vulnerability Index  
+
+The **Health System Vulnerability Index** measures a region’s susceptibility to health system challenges.  
+Scale: **0 = low vulnerability, 1 = high vulnerability.**
+
+![Health System Vulnerability](path/to/health_system_vulnerability_chart.png)
+
+> **Insight:**  
+> Lango is the most vulnerable region, while Kampala is the least.  
+> Prioritize interventions in high-risk areas like Lango to improve resilience.  
+
+
+---
+
+## Nutrition Adequacy vs Food Consumption by Region  
+
+This chart compares **per capita food consumption** with the **mean adequacy ratio of nutrients** across regions.  
+
+- Regions higher on the chart = better nutrient adequacy (even if food consumption is low).  
+- Regions further right = higher food consumption (though this does not always guarantee adequate nutrition).  
+
+![Nutrition Adequacy vs Food Consumption](path/to/nutrition_vs_food_chart.png)
+
+> **Insight:**  
+> Some regions consume more food but still have low nutrient adequacy, highlighting the need for **diverse diets** and **nutrition-focused interventions**.  
+
+
+---
+
+## Vulnerability to Climate Change Index by Region  
+
+This chart shows how different regions are exposed to the **risks of climate change**, with values ranging from **0 (low vulnerability) to 1 (high vulnerability).**
+
+- **Most vulnerable:** Kigezi, Busoga, and Ankole → greatest climate risks.  
+- **Least vulnerable:** Kampala and Elgon → still require resilience strategies.  
+
+![Vulnerability to Climate Change](path/to/climate_vulnerability_chart.png)
+
+> **Insight:**  
+> Regions like Kigezi and Busoga need urgent **climate adaptation measures**, while lower-risk regions should focus on sustaining their resilience.
 ## Merge Logic
 - Outer join on `district`.  
 - Descriptive indicator names retained (avoid unit confusion).  
