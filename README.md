@@ -16,11 +16,7 @@
 5. Compute descriptive statistics & coverage.  
 6. Create a Composite Adequacy Score = mean of available indicators per district.  
 
-## Data Cleaning Rules
-- Trim & harmonize district names; treat empty/NA as `Unknown`.  
-- Coerce numeric fields (`'1,234' → 1234`).  
-- Drop duplicate rows (keep first).  
-- Retain indicators with at least one non-missing value.  
+
 
 # Communicating Composite Vulnerability  
 
