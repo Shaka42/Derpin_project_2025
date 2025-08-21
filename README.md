@@ -150,4 +150,6 @@ All 12 indicators cover 100% of districts (122/122).
 ## Glossary
 - **Adequacy** → How much observed consumption meets recommended intake.  
 - **Composite Adequacy Score** → Mean of all available nutrient indicators.  
-- **Coverage** → Share of districts with non-missing values.  
+- **Coverage** → Share of districts with non-missing values.
+##Note
+Inorder to run the Dashboard using command -> streamlit run dashboard.py
