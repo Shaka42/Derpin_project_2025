@@ -235,101 +235,86 @@ if selected == "🏠 Dashboard":
         st.plotly_chart(fig_hist, use_container_width=True)
 
 # ---------------- ENHANCED RISK MAP ---------------- #
+
+# --- Replace Risk Map page with analytics/visuals from derpin_notebook_app.py --- #
 elif selected == "🗺️ Risk Map":
-    st.title("🗺️ Interactive Risk Mapping")
-    
-    # Map controls
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        vuln_type = st.selectbox(
-            "Vulnerability Indicator",
-            ["Composite Vulnerability Index", "Health System Vulnerability Index", 
-             "Mean Adequacy Ratio Index", "Per Capita Food Consumption Index",
-             "Vulnerability to Climate Change Index"]
+    st.title("🗺️ Vulnerability Analytics (No Map)")
+    # Composite Vulnerability
+    st.header("Composite Vulnerability Index by Region")
+    if 'Composite Vulnerability Index' in vulnerability.columns:
+        composite = vulnerability[['Region','Composite Vulnerability Index']].drop_duplicates(subset=['Region']).sort_values(by='Composite Vulnerability Index', ascending=False).reset_index(drop=True)
+        fig = px.bar(
+            composite,
+            x="Region",
+            y="Composite Vulnerability Index",
+            color="Composite Vulnerability Index",
+            title="Composite Vulnerability Index by Region"
         )
-    with col2:
-        map_style = st.selectbox("Map Style", ["Light", "Dark", "Satellite"])
-    with col3:
-        show_labels = st.checkbox("Show Region Labels", value=True)
-    
-    # Always use coordinate-based scatter map
-    st.info("📍 Using coordinate-based visualization")
-    # Create risk categories for color coding
-    vulnerability['Risk_Category'] = pd.cut(
-        vulnerability['Composite Vulnerability Index'],
-        bins=[0, 0.3, 0.6, 1.0],
-        labels=['Low Risk', 'Medium Risk', 'High Risk']
-    )
+        fig.update_layout(xaxis_tickangle=-45, coloraxis_colorbar=dict(title="Vulnerability Index"))
+        st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(composite)
+    else:
+        st.warning("Composite Vulnerability Index data not available.")
 
-    # Ensure 'Population' column exists for map size
-    if 'Population' not in vulnerability.columns:
-        st.warning("'Population' column missing in data. Using default size for map points.")
-        vulnerability['Population'] = 100000  # Default value
+    # Health System Vulnerability
+    st.header("Health System Vulnerability Index by Region")
+    if 'Health System Vulnerability Index' in vulnerability.columns:
+        health = vulnerability[['Region','Health System Vulnerability Index']].drop_duplicates(subset=['Region']).sort_values(by='Health System Vulnerability Index', ascending=False).reset_index(drop=True)
+        fig = px.scatter(
+            health,
+            x="Health System Vulnerability Index",
+            y="Region",
+            size="Health System Vulnerability Index",
+            color="Health System Vulnerability Index",
+            title="Health System Vulnerability Index by Region"
+        )
+        fig.update_layout(yaxis={'categoryorder': 'total ascending'})
+        st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(health)
+    else:
+        st.warning("Health System Vulnerability Index data not available.")
 
-    # Enhanced scatter map
-    fig_scatter = px.scatter_mapbox(
-        vulnerability,
-        lat="latitude",
-        lon="longitude",
-        size="Population",
-        color="Risk_Category",
-        hover_name="Region",
-        hover_data={
-            "Composite Vulnerability Index": ":.2f",
-            "Population": ":,",
-            "latitude": False,
-            "longitude": False
-        },
-        color_discrete_map={
-            'Low Risk': '#16a34a',
-            'Medium Risk': '#d97706', 
-            'High Risk': '#dc2626'
-        },
-        zoom=6,
-        height=600,
-        title="🌍 Community Vulnerability Risk Map"
-    )
-    
-    fig_scatter.update_layout(
-        mapbox_style="open-street-map",
-        font=dict(family="Inter", size=12),
-        title_x=0.5
-    )
-    st.plotly_chart(fig_scatter, use_container_width=True)
-    
-    # Risk Analysis Summary
-    st.markdown("### 📊 Risk Analysis Summary")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        high_risk = len(vulnerability[vulnerability['Composite Vulnerability Index'] >= 0.6])
-        total_pop_high_risk = vulnerability[vulnerability['Composite Vulnerability Index'] >= 0.6]['Population'].sum()
-        st.markdown(f"""
-        <div class="metric-card" style="border-left-color: #dc2626;">
-            <div class="metric-value" style="color: #dc2626;">{high_risk}</div>
-            <div class="metric-label">High Risk Regions</div>
-            <small>{total_pop_high_risk:,} people affected</small>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        med_risk = len(vulnerability[(vulnerability['Composite Vulnerability Index'] >= 0.3) & 
-                                   (vulnerability['Composite Vulnerability Index'] < 0.6)])
-        st.markdown(f"""
-        <div class="metric-card" style="border-left-color: #d97706;">
-            <div class="metric-value" style="color: #d97706;">{med_risk}</div>
-            <div class="metric-label">Medium Risk Regions</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        low_risk = len(vulnerability[vulnerability['Composite Vulnerability Index'] < 0.3])
-        st.markdown(f"""
-        <div class="metric-card" style="border-left-color: #16a34a;">
-            <div class="metric-value" style="color: #16a34a;">{low_risk}</div>
-            <div class="metric-label">Low Risk Regions</div>
-        </div>
-        """, unsafe_allow_html=True)
+    # Food Security
+    st.header("Nutrition Adequacy vs Food Consumption by Region")
+    if 'Mean Adequacy Ratio Index' in vulnerability.columns and 'Per Capita Food Consumption Index' in vulnerability.columns:
+        food_sec = vulnerability[['Region','Mean Adequacy Ratio Index','Per Capita Food Consumption Index']].drop_duplicates(subset=['Region']).reset_index(drop=True)
+        fig = px.scatter(
+            food_sec,
+            x='Per Capita Food Consumption Index',
+            y='Mean Adequacy Ratio Index',
+            color='Region',
+            hover_data=['Region'],
+            title='Nutrition Adequacy vs Food Consumption by Region'
+        )
+        fig.update_traces(marker=dict(size=10, opacity=0.8, line=dict(width=2, color='DarkSlateGrey')))
+        st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(food_sec)
+    else:
+        st.warning("Food security data not available.")
+
+    # Climate Change Vulnerability
+    st.header("Vulnerability to Climate Change Index by Region")
+    if 'Vulnerability to Climate Change Index' in vulnerability.columns:
+        climate = vulnerability[['Region','Vulnerability to Climate Change Index']].drop_duplicates(subset=['Region']).sort_values(by='Vulnerability to Climate Change Index', ascending=False).reset_index(drop=True)
+        fig = px.bar(
+            climate,
+            x="Region",
+            y="Vulnerability to Climate Change Index",
+            color="Vulnerability to Climate Change Index",
+            title="Vulnerability to Climate Change Index by Region"
+        )
+        fig.update_layout(xaxis_tickangle=-45, coloraxis_colorbar=dict(title="Vulnerability Index"))
+        st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(climate)
+    else:
+        st.warning("Climate Change Vulnerability Index data not available.")
+
+    # Nutrient Table
+    st.header("Merged Nutrient Data Table")
+    if nutrients is not None:
+        st.dataframe(nutrients)
+    else:
+        st.warning("Nutrient data not available.")
 
 # ---------------- ENHANCED NUTRITION ANALYSIS ---------------- #
 elif selected == "🥗 Nutrition":
