@@ -224,6 +224,385 @@ merged_nutrients.describe()
 
 # In[ ]:
 
+merged_nutrients.rename(columns={'Average Consumption adequacy of Kilocaleries (kcal)': 'Consumption adequacy of Kilocaleries (kcal)'}, inplace=True)
+
+## Average  Consumption adequacy of Nutrients
+
+
+
+merged_nutrients
+
+merged_nutrients.columns
+
+### Exploring Districts with the lowest adequacy in various nutrients in Uganda
+
+### Calcium
+
+
+nutrient = "Average Consumption adequacy of Calcium (mg)"
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+### Folate
+
+nutrient =    "Average Consumption adequacy of Folate (mcg)"
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+# Iron
+
+nutrient ="Average Consumption adequacy of Iron (mg)"
+
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+# Kilocaleries
+
+nutrient =  "Consumption adequacy of Kilocaleries (kcal)"
+
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+# Proteins
+
+nutrient =  "Average Consumption adequacy of Proteins (mg)"
+
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+# Riboflavin
+
+nutrient ="Average Consumption adequacy of Riboflavin (mg)"
+
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+# Thiamin
+
+nutrient = "Average Consumption adequacy of Thiamin (mg)"
+
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+# Vitamin A
+
+nutrient = "Average Consumption adequacy of Vitamin A (mcg)"
+
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+## Vitamin B12
+
+nutrient ="Average Consumption adequacy of Vitamin B12 (mcg)"
+
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+# Vitamin B6
+
+nutrient ="Average Consumption adequacy of Vitamin B6 (mg)"
+
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+# Vitamin C
+
+nutrient ="Average Consumption adequacy of Vitamin C (mg)"
+
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+# Zinc
+
+nutrient = "Average Consumption adequacy of Zinc (mg)"
+bottom5 = merged_nutrients.nsmallest(5, nutrient)
+bottom5["Group"] = "Bottom 5"
+
+# Horizontal bar chart
+fig = px.bar(
+    bottom5,
+    x=nutrient,
+    y="district",
+    color="Group",
+    text=nutrient,
+    orientation="h",
+     color_discrete_map={
+         "Bottom 5": "red"
+          }
+)
+
+fig.update_traces(textposition="outside")
+fig.update_layout(
+    title=f"Bottom 5 Districts by {nutrient}",
+    xaxis_title="Adequacy",
+    yaxis_title="District",
+    yaxis=dict(categoryorder="total ascending")
+)
+
+fig.show()
+
+
+
+fig = px.scatter(merged_nutrients,
+                 x='Consumption adequacy of Kilocaleries (kcal)',
+                 y="Average Consumption adequacy of Iron (mg)",
+                 title="Hidden Hunger: Calories vs Iron Adequacy",
+                 hover_data='district')
+fig.show()
+
 
 
 
