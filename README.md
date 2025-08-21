@@ -41,7 +41,6 @@ The **Composite Vulnerability Index (CVI)** is the average of four dimensions:
 
 This provides a single measure (**0 = low, 1 = high**) to compare regions.
 
-![Composite Vulnerability Index](path/to/composite_vulnerability_chart.png)
 
 > **Insight:**  
 > Acholi, Lango, and Busoga are the most vulnerable regions, while Kampala and Elgon are the least.  
@@ -55,7 +54,6 @@ This provides a single measure (**0 = low, 1 = high**) to compare regions.
 The **Health System Vulnerability Index** measures a region’s susceptibility to health system challenges.  
 Scale: **0 = low vulnerability, 1 = high vulnerability.**
 
-![Health System Vulnerability](path/to/health_system_vulnerability_chart.png)
 
 > **Insight:**  
 > Lango is the most vulnerable region, while Kampala is the least.  
@@ -71,7 +69,7 @@ This chart compares **per capita food consumption** with the **mean adequacy rat
 - Regions higher on the chart = better nutrient adequacy (even if food consumption is low).  
 - Regions further right = higher food consumption (though this does not always guarantee adequate nutrition).  
 
-![Nutrition Adequacy vs Food Consumption](path/to/nutrition_vs_food_chart.png)
+
 
 > **Insight:**  
 > Some regions consume more food but still have low nutrient adequacy, highlighting the need for **diverse diets** and **nutrition-focused interventions**.  
@@ -86,7 +84,6 @@ This chart shows how different regions are exposed to the **risks of climate cha
 - **Most vulnerable:** Kigezi, Busoga, and Ankole → greatest climate risks.  
 - **Least vulnerable:** Kampala and Elgon → still require resilience strategies.  
 
-![Vulnerability to Climate Change](path/to/climate_vulnerability_chart.png)
 
 > **Insight:**  
 > Regions like Kigezi and Busoga need urgent **climate adaptation measures**, while lower-risk regions should focus on sustaining their resilience.
