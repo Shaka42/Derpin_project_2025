@@ -338,89 +338,154 @@ elif selected == "🗺️ Vulnerability":
     else:
         st.warning("Nutrient data not available.")
 
-# ---------------- ENHANCED NUTRITION ANALYSIS ---------------- #
+# ---------------- NUTRITION ANALYSIS (FROM NOTEBOOK) ---------------- #
 elif selected == "🥗 Nutrition":
     st.title("🥗 Nutritional Adequacy Analysis")
     
-    # Nutrient selection and analysis
-    nutrient_cols = [col for col in nutrients.columns if 'Average Consumption adequacy' in col]
+    # Make a copy and standardize column names
+    merged_nutrients = nutrients.copy()
     
-    if nutrient_cols:
-        selected_nutrient = st.selectbox("Select Nutrient for Analysis", nutrient_cols)
-        
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            # Enhanced nutrient adequacy chart
-            sorted_data = nutrients.sort_values(by=selected_nutrient, ascending=False)
-            fig_nutrients = px.bar(
-                sorted_data.head(15),
-                x='district',
-                y=selected_nutrient,
-                title=f"📊 {selected_nutrient.split('/')[-1]} Adequacy by District",
-                color=selected_nutrient,
-                color_continuous_scale="RdYlGn",
-                text=selected_nutrient
-            )
-            fig_nutrients.update_traces(texttemplate='%{text:.2f}', textposition='outside')
-            fig_nutrients.update_layout(
-                xaxis_tickangle=-45,
-                height=500,
-                font=dict(family="Inter", size=10)
-            )
-            st.plotly_chart(fig_nutrients, use_container_width=True)
-        
-        with col2:
-            # Nutrient adequacy statistics
-            adequacy_mean = nutrients[selected_nutrient].mean()
-            adequacy_std = nutrients[selected_nutrient].std()
-            deficient_count = len(nutrients[nutrients[selected_nutrient] < 0.7])
-            
-            st.markdown("**📈 Nutrient Statistics**")
-            st.metric("Average Adequacy", f"{adequacy_mean:.2f}")
-            st.metric("Standard Deviation", f"{adequacy_std:.2f}")
-            st.metric("Deficient Regions", f"{deficient_count}")
-            
-            # Risk categorization
-            if adequacy_mean < 0.7:
-                create_alert_card("Nutrition Alert", 
-                                f"Average {selected_nutrient.split('/')[-1]} adequacy is below recommended levels.", 
-                                "high")
-            elif adequacy_mean < 0.9:
-                create_alert_card("Monitor", 
-                                f"{selected_nutrient.split('/')[-1]} levels need monitoring.", 
-                                "medium")
+    # First, let's see what columns we actually have
+    #st.markdown("### Debug: Current Columns")
+    #st.write("Available columns:", merged_nutrients.columns.tolist())
     
-    # Multi-nutrient comparison
-    st.markdown("### 🔄 Multi-Nutrient Comparison")
-    if len(nutrient_cols) > 1:
-        selected_nutrients = st.multiselect(
-            "Select Nutrients for Comparison", 
-            nutrient_cols, 
-            default=nutrient_cols[:3]
-        )
+    # Standardize column names to ensure uniformity
+    column_mapping = {}
+    for col in merged_nutrients.columns:
+        if 'district' in col.lower():
+            continue  # Keep district column as is
+        elif 'adequacy' in col.lower() and 'kilocaleries' in col.lower():
+            column_mapping[col] = 'Consumption adequacy of Kilocalories (kcal)'
+        elif 'adequacy' in col.lower():
+            # Standardize all other adequacy columns
+            if 'calcium' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Calcium (mg)'
+            elif 'folate' in col.lower() or 'foliate' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Folate (mcg)'
+            elif 'iron' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Iron (mg)'
+            elif 'protein' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Proteins (mg)'
+            elif 'riboflavin' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Riboflavin (mg)'
+            elif 'thiamin' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Thiamin (mg)'
+            elif 'vitamin a' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Vitamin A (mcg)'
+            elif 'vitamin b12' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Vitamin B12 (mcg)'
+            elif 'vitamin b6' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Vitamin B6 (mg)'
+            elif 'vitamin c' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Vitamin C (mg)'
+            elif 'zinc' in col.lower():
+                column_mapping[col] = 'Average Consumption adequacy of Zinc (mg)'
+    
+    # Apply the column mapping
+    merged_nutrients = merged_nutrients.rename(columns=column_mapping)
+    
+    st.markdown("### After Standardization:")
+    #st.write("Standardized columns:", merged_nutrients.columns.tolist())
+    
+    st.markdown("## Average Consumption adequacy of Nutrients")
+    
+    # Display merged nutrients data
+    st.dataframe(merged_nutrients)
+    
+    #st.markdown("### Exploring Districts with the lowest adequacy in various nutrients in Uganda")
+    
+    #Define nutrients to analyze (standardized names)
+    nutrients_to_analyze = [
+        "Average Consumption adequacy of Calcium (mg)",
+        "Average Consumption adequacy of Folate (mcg)",
+        "Average Consumption adequacy of Iron (mg)",
+        "Consumption adequacy of Kilocalories (kcal)",
+        "Average Consumption adequacy of Proteins (mg)",
+        "Average Consumption adequacy of Riboflavin (mg)",
+        "Average Consumption adequacy of Thiamin (mg)",
+        "Average Consumption adequacy of Vitamin A (mcg)",
+        "Average Consumption adequacy of Vitamin B12 (mcg)",
+        "Average Consumption adequacy of Vitamin B6 (mg)",
+        "Average Consumption adequacy of Vitamin C (mg)",
+        "Average Consumption adequacy of Zinc (mg)"
+    ]
+    
+    # Filter to only available nutrients
+    available_nutrients = [n for n in nutrients_to_analyze if n in merged_nutrients.columns]
+    #st.write(f"Found {len(available_nutrients)} matching nutrients:", available_nutrients)
+    
+    # Get district column name
+    district_col = 'district'
+    for col in merged_nutrients.columns:
+        if 'district' in col.lower():
+            district_col = col
+            break
+    
+    for nutrient in available_nutrients:
+        # Clean nutrient name for display
+        nutrient_display = nutrient.replace('Average Consumption adequacy of ', '').replace('Consumption adequacy of ', '')
+        st.markdown(f"### {nutrient_display}")
         
-        if selected_nutrients:
-            # Radar chart for comprehensive view
-            avg_nutrients = nutrients[selected_nutrients].mean()
+        if nutrient in merged_nutrients.columns and district_col in merged_nutrients.columns:
+            # Check for missing values
+            non_null_data = merged_nutrients[[district_col, nutrient]].dropna()
             
-            fig_radar = go.Figure()
-            fig_radar.add_trace(go.Scatterpolar(
-                r=avg_nutrients.values,
-                theta=[col.split('/')[-1] for col in selected_nutrients],
-                fill='toself',
-                name='Average Adequacy'
-            ))
-            
-            fig_radar.update_layout(
-                polar=dict(
-                    radialaxis=dict(visible=True, range=[0, 1.5])
-                ),
-                showlegend=True,
-                title="🎯 Nutritional Adequacy Radar Chart",
-                font=dict(family="Inter", size=12)
+            if len(non_null_data) >= 5:
+                bottom5 = non_null_data.nsmallest(5, nutrient).copy()
+                bottom5["Group"] = "Bottom 5"
+                
+                # Horizontal bar chart
+                fig = px.bar(
+                    bottom5,
+                    x=nutrient,
+                    y=district_col,
+                    color="Group",
+                    text=nutrient,
+                    orientation="h",
+                    color_discrete_map={"Bottom 5": "red"}
+                )
+                
+                fig.update_traces(textposition="outside")
+                fig.update_layout(
+                    title=f"Bottom 5 Districts by {nutrient_display}",
+                    xaxis_title="Adequacy",
+                    yaxis_title="District",
+                    yaxis=dict(categoryorder="total ascending"),
+                    height=400
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.warning(f"Insufficient data for {nutrient_display} (only {len(non_null_data)} non-null values)")
+    
+    # Hidden Hunger Analysis
+    st.markdown("### Hidden Hunger: Calories vs Iron Adequacy")
+    kilocalories_col = 'Consumption adequacy of Kilocalories (kcal)'
+    iron_col = 'Average Consumption adequacy of Iron (mg)'
+    
+    if kilocalories_col in merged_nutrients.columns and iron_col in merged_nutrients.columns:
+        scatter_data = merged_nutrients[[district_col, kilocalories_col, iron_col]].dropna()
+        
+        if len(scatter_data) > 0:
+            fig_scatter = px.scatter(
+                scatter_data,
+                x=kilocalories_col,
+                y=iron_col,
+                title="Hidden Hunger: Calories vs Iron Adequacy",
+                hover_data=[district_col]
             )
-            st.plotly_chart(fig_radar, use_container_width=True)
+            st.plotly_chart(fig_scatter, use_container_width=True)
+            
+            st.markdown("""
+            **Hidden Hunger Insight:** This scatter plot reveals districts that may have adequate calorie intake 
+            but insufficient iron adequacy, indicating micronutrient deficiencies despite energy sufficiency.
+            Districts in the bottom-right quadrant are particularly at risk for hidden hunger.
+            """)
+        else:
+            st.warning("No data available for Hidden Hunger analysis")
+    else:
+        st.warning(f"Required columns not found. Looking for: {kilocalories_col} and {iron_col}")
+        st.write("Available columns:", merged_nutrients.columns.tolist())
 
 # ---------------- ENHANCED REPORTS ---------------- #
 elif selected == "📋 Reports":
